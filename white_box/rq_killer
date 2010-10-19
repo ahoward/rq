@@ -1,0 +1,27 @@
+#!/dmsp/reference/bin/ruby
+STDOUT.sync = true
+$VERBOSE=nil
+require 'posixlock'
+sec = 8
+loopno = 0
+loop do
+  begin
+    open('q/lock','r+') do |f| 
+      puts 'locking...'
+      #f.lockf File::F_LOCK, 0
+      (locked=f.lockf(File::F_TLOCK, 0)) or sleep(1 + rand) until locked
+      #locked = f.lockf(File::F_TLOCK, 0) until locked
+      system "touch -B 3600 q/lock"
+      puts 'locked'
+      sleep(30)
+    end
+    puts 'un-locked'
+    #sleep((2 * sec) + rand(42))
+    #sleep(sec + rand(sec))
+    sleep 300
+  rescue => e
+    p e
+  end
+  puts loopno
+  loopno += 1
+end

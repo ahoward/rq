@@ -1,0 +1,27 @@
+=== SIMPLE
+
+  * cd into ./all/
+
+  * ./install.sh /full/path/to/a/nfs/mounted/directory/
+
+  * the nfs mounted path above should be visible by all cluster nodes.
+    __all__ required software will be installed into this directory root. when
+    complete all that's needed is a
+
+      export PATH=/full/path/to/a/nfs/mounted/directory/bin:$PATH
+
+    (note 'bin') to use rq
+
+  * this is the __reccomended__ procedure since it will result in a single nfs
+    install which all cluster nodes can use.  the other install methods mean
+    you will have to install rq on __each__ node you plan to use it on.
+
+=== RUBYGEMS
+
+  * gem install rq
+
+=== STANDARD
+
+  * install all packages in ./depends/packages manually
+
+  * ruby install.rb

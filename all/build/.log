@@ -1,0 +1,4 @@
+tar (child): : Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: Child returned status 2
+tar: Error exit delayed from previous errors

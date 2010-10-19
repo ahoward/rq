@@ -1,0 +1,18 @@
+#!/dmsp/reference/bin/ruby
+STDOUT.sync = true
+$VERBOSE=nil
+require 'posixlock'
+q = ARGV.shift || 'q'
+begin
+  open("#{ q }/lock",'r+') do |f| 
+    puts 'locking...'
+    #f.lockf File::F_LOCK, 0
+    (locked=f.lockf(File::F_TLOCK, 0)) until locked
+    system "touch -B 3600 q/lock"
+    puts 'locked <enter> to unlock...'
+    STDIN.gets
+  end
+  puts 'un-locked'
+rescue => e
+  p e
+end

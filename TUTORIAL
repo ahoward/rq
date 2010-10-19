@@ -1,0 +1,230 @@
+---
+=== SYNOPSIS
+---
+
+rq is a tool for instantly building simple linux clusters based on the concept
+of coordinated shared access to an nfs mounted priority job queue.  the idea is
+a simple one: one, or more, nodes take jobs from a priority queue, run them, and
+return their status and other information to the queue.  the priority queue
+itself is made available to all the 'feeding' nodes by virtue of it being placed
+on a globally visible nfs filesystem.
+
+                          -----------
+                          | priority |
+                          | queue    |
+                          -----------
+                         /      |     \
+                        /       |      \
+                       --------nfs-------
+                      /         |        \
+                     /          |         \
+                ----------  ----------  ----------
+                | node_a |  | node_b |  | node_c |
+                ----------  ----------  ----------
+
+all feeding nodes are equal, idependent, and isolated.  any node capable of
+mounting the nfs filesystem may submit to the queue.  so long as the nfs server
+and one node are up - the cluster can continute processing jobs.
+
+
+---
+=== EXAMPLE INSTALL
+---
+
+download rq from http://raa.ruby-lang.org/project/rq
+
+unpack rq-X.X.X.tgz
+
+cd ./depends/
+
+the ./depends/packages/ directory will contain ALL packages required to install
+rq including ruby[www.ruby-lang.org]
+
+the file ./depends/install.sh installs ALL required packages for ruby queue into
+an nfs mounted directory.  it is a simple script - feel free to read/edit.
+
+installed packages will include:
+
+* ruby
+* sqlite
+* sqlite-ruby
+* arrayfields
+* posixlock
+* lockfile
+* rq
+
+the install.sh procedure is reccomended since
+
+* a common nfs filesystem is required on which to store the queue anyhow
+
+* installing all packages into this common nfs filesystem means no
+  software will be installed locally on any node which simplifies maintainance
+  and the addition of new nodes to the cluster.
+
+* root privledges are not required for this technique
+
+* this technique implies only two requirements for any node to join the cluster
+  * the nfs filesystem is visible to it
+  * a single crontab entry has been added
+
+the user running ./depends/install.sh should have write permission (or sudo
+write permission) to the /nfs mounted directory.
+
+following are the steps for an install into the nfs mounted directory named
+'/nfs'.  absolutely NO packages or files will be installed outside this hierachy
+so simply use 'rm -rf' to un-install.  
+  
+  tar xvfz rq-X.X.X.tgz
+
+  cd rq-X.X.X/
+
+  cd depends/
+
+  ./install.sh /nfs  
+
+---
+=== EXAMPLE SETUP
+---
+
+= path setup
+
+the following instructions assume your PATH has been set appropriately on all
+nodes.  your path should be configured to include the bin directory of the nfs
+prefix used in the install.  eg:
+
+  export PATH=/nfs/bin/:$PATH
+
+if this has been done correctly the output of
+
+  which rq
+
+should report something like
+
+  /nfs/bin/rq
+
+/nfs being the location you just installed into
+
+
+= create the queue
+
+you must create/initialize the queue structure.  this should be done one time
+only from any host
+
+  rq /nfs/queue create
+
+
+= configure immortal feeders on all processing nodes
+
+add crontab entries similar to below to keep immortal feeders alive on ALL
+nodes.  this will not start feeders every 15 mintues - it will only attempt to
+start one every 15 minutes, failing silently if one is already running.
+
+  */15 * * * * /nfs/bin/rq /nfs/queue start 
+
+obviously you will need to edit the path to rq, the path to the queue, and
+possibly the log path.
+
+this can done automatically simply by running
+
+  rq /nfs/queue cron start
+
+essentially the crontab entry simply ensures that a feeder daemon is running on
+a node at all times, even after a reboot.  a majority of the time the cron entry
+will do nothing - only when no daemon is running will it be able to generate a
+pidfile and lock it in order to start feeding.  one feeder per queue per host is
+allowed by default.
+
+if you are not quite ready to setup crontab entries on a dozen machines and want
+to start a feeder from a terminal for debugging/testing purposes you might use
+something like this in a separate terminal/host from the one you'll submit jobs
+from:
+
+  /nfs/bin/rq /nfs/queue feed --min_sleep=2 --max_sleep=4
+
+which will log all output to STDERR and poll at a random interval between
+--min_sleep and --max_sleep.  a slight diversion is required here to explain
+min_sleep and max_sleep.
+
+once a feeder finds the queue to be empty it will begin polling the queue
+periodically to see if any new jobs have come in.  min_sleep and max_sleep
+define the lower and upper bound of the polling interval, which is actually
+chosen at random to be between these two numbers for performance reasons.
+
+_never_ would you use the polling interval shown above (min_sleep=2,
+max_sleep=4) in a production environment, such a rapid interval would _only_ be
+for debugging/testing.  
+  
+as reference the defaults for min_sleep and max_sleep are 42 and 240
+respectively, and this gives good responsiveness on a cluster of 12-20 machines.
+you can determine how long a job would sit in the queue, on average, before
+being noticed (assuming all nodes are not busy when the job is submitted) using
+this formula
+
+  median_sleep = ((max_sleep - min_sleep) / 2) + min_sleep
+
+  wait = n_nodes / median_sleep
+
+so, for example, if you use the default min_sleep and max_sleep for 10 feeding
+nodes a job would sit in the queue for, on average, about 10 seconds before
+being picked up.  
+
+it's very important to note all this talk of polling applies _only_ to nodes
+which have found the queue emtpy and are checking back at a regular interval to
+look for more work.  while the queue is full of jobs each node simply works to
+capacity to take jobs, runs them, and return them to the queue - so there is no
+polling.  in fact, it's best to consider the min_sleep and max_sleep options as
+affecting how quickly the cluster as a whole will tackle a freshly loaded queue:
+once the queue is loaded every node is 'too busy' to poll any longer.
+
+one other option which should be mentioned here is the --max_feed, -f option.
+this option simply determines the number of concurrent jobs rq will run at once.
+the default value is 2 - therefore two jobs will be running simoultaneously on
+each feeding node when the queue has been loaded with jobs.  this command
+
+  /nfs/bin/rq /nfs/queue feed --min_sleep=2 --max_sleep=4 --max_feed=1
+
+might be used in a terminal (logging to stderr) to watch rq in action.  limiting
+the number of feeders to 1 makes the output somewhat easier to understand.
+however, unless your machines cannot handle more than one of the jobs you plan
+to submit it's best to keep this number > 1 for production clusters.
+
+
+---
+=== EXAMPLE USAGE
+---
+
+
+= job submission
+
+submit a command line job to the nfs mounted queue
+
+  rq /nfs/queue submit 'echo 42'
+
+in this case the quoting is not needing but beware of shell expansion when
+submitting jobs from the shell
+
+submit a list of jobs from 'jobfile'.  jobfile is simply a text file with one
+command per line.  blank lines and comments (#) are ignored.
+
+  rq /nfs/queue submit - < jobfile 
+
+= cluster status
+
+check the status of your jobs (note that it may take cron a while to start
+feeders depending on the interval used to maintain them in your crontab file)
+
+  rq /nfs/queue status 
+
+= where to go from here
+
+for more info try
+
+  rq help
+
+
+---
+=== AUTHOR/ASSISTANCE/BUG REPORTS
+---
+
+  ara.t.howard@noaa.gov
+

@@ -1,0 +1,20 @@
+---
+
+- confine/constrain mechansim
+- heartbeat to slave
+- ls show elapsed time
+- rq q 1234 234 bug???
+- full boolean resource monitoring and resource requests
+- pull out some infilter/outfilter classes for all the stdin/stdout parsing
+- rq relay mode (submit and track exit_status in local db)
+- config file configuration for feeder 
+- examples dir with shell commands/scripts
+- db message queue to send commands to remote nodes - ttl issues here...
+- consider/test tracking feeders in queue rather than using lock on local file?
+- use nodes to periodically generate stats and cache them
+
+X rotation bug when dest directory specified
+X backoff lockd recovery time
+X output for start/stop (include shush)
+X .rq dir for everything (log, pidfile)
+X cronify

@@ -1,0 +1,2 @@
+*/5 * * * * (/dmsp/reference/bin/ruby /dmsp/moby-1-1/ahoward/shared/eg/ruby/rq/rq-0.1.5/bin/rq /dmsp/moby-1-1/ahoward/shared/eg/ruby/rq/rq-0.1.5/q feed -d -l/home/ahoward/cfq.log -v4 -q) >>/home/ahoward/cfq.oe 2>&1
+
