@@ -7,7 +7,7 @@ unless defined? $__rq__
 
     AUTHOR = 'ara.t.howard@gmail.com'
     LIBNAME = 'rq'
-    VERSION = '3.3.0'
+    VERSION = '3.4.0'
     LIBVER = "#{ LIBNAME }-#{ VERSION }"
     DIRNAME = File::dirname(File::expand_path(__FILE__)) + File::SEPARATOR
     ROOTDIR = File::dirname(DIRNAME)
