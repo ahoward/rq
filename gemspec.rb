@@ -1,6 +1,7 @@
 #! /usr/bin/env gem build
 
-lib, version = File::basename(File::dirname(File::expand_path(__FILE__))).split %r/-/, 2
+lib = 'rq'
+version = '3.5.0'
 
 require 'rubygems'
 

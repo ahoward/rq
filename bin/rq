@@ -306,7 +306,8 @@
         end
         if @dot_rq_dir.nil?
           home = ENV['HOME'] || File::expand_path('~') rescue abort("ENV['HOME'] is unset!")
-          @dot_rq_dir = File::join home, '.rq', @qpath
+          parts = [home, '.rq', @qpath].compact
+          @dot_rq_dir = File::join(*parts)
         end
         FileUtils.mkdir_p @dot_rq_dir
 #--}}}
