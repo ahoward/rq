@@ -1,7 +1,9 @@
-#! /usr/bin/env gem build
-
 lib = 'rq'
-version = '3.5.0'
+
+dirname = File.dirname(__FILE__)
+lines = IO.readlines(File.join('lib/rq.rb'))
+line = lines.detect{|line| line =~ /VERSION =/}
+version = line.split(/=/).last.scan(/[\d.]+/).first
 
 require 'rubygems'
 
@@ -15,6 +17,8 @@ Gem::Specification::new do |spec|
     end
   end
 
+  spec.name = lib 
+  spec.description = 'ruby queue is a zero-admin zero-configuration tool used to create instant unix clusters'
   spec.name = lib 
   spec.version = version 
   spec.platform = Gem::Platform::RUBY

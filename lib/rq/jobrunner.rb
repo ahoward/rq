@@ -56,10 +56,15 @@ unless defined? $__rq_jobrunner__
         @stderr = @job['stderr']
         @data = @job['data']
 
-        @stdin &&= File::join @q.path, @stdin # assume path relative to queue 
-        @stdout &&= File::join @q.path, @stdout # assume path relative to queue 
-        @stderr &&= File::join @q.path, @stderr # assume path relative to queue
-        @data &&= File::join @q.path, @data # assume path relative to queue 
+        @stdin &&= File::join(@q.path, @stdin) # assume path relative to queue 
+        @stdout &&= File::join(@q.path, @stdout) # assume path relative to queue 
+        @stderr &&= File::join(@q.path, @stderr) # assume path relative to queue
+        @data &&= File::join(@q.path, @data) # assume path relative to queue 
+
+        [@stdin, @stdout, @stderr].each do |path|
+          FileUtils::mkdir_p(FileUtils::dirname(path)) rescue nil
+          FileUtils::touch(path) unless File.exist?(path)
+        end
 
         @cid = 
           Util::fork do
@@ -95,8 +100,6 @@ unless defined? $__rq_jobrunner__
             serr = ">&#{ @stderr }" if @stderr
             "( ( #{ command } ;) #{ sin } #{ sout } ) #{ serr }"
           end
-
-        FileUtils::touch(@stdin) unless File.exist?(@stdin)
 
         @w.puts command
         @w.close

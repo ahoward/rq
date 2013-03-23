@@ -1,4 +1,0 @@
-#!/bin/sh
-rq='./bin/rq'
-rqlib='./lib'
-RUBYLIB=${rqlib} $rq "$@"

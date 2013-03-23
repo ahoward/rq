@@ -215,13 +215,20 @@ unless defined? $__rq_jobqueue__
 
               execute(sql){}
 
-              FileUtils::rm_rf standard_in_4(jid)
-              FileUtils::rm_rf standard_out_4(jid)
-              FileUtils::rm_rf standard_err_4(jid)
               #FileUtils::rm_rf data_4(jid)
+=begin
+p :job => job
+p :ts => ts
+p :pwd => Dir.pwd
+p :data => data
+p :data_4 => data_4(jid)
+p :standard_in_4 => standard_in_4(jid)
+exit!(1)
+=end
               FileUtils::cp ts.path, standard_in_4(jid) if ts
+
               if data
-                FileUtils::mv data, data_4(jid)
+                FileUtils::cp data, data_4(jid)
               else
                 FileUtils::mkdir_p data_4(jid)
               end

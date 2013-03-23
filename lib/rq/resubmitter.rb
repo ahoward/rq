@@ -77,8 +77,8 @@ unless defined? $__rq_resubmitter__
             job['tag'] = @tag if @options.has_key?('tag')
             job['runner'] = @runner if @options.has_key?('runner')
             job['restartable'] = @restartable if @options.has_key?('restartable')
-            job['stdin'] = @job_stdin if @job_stdin
-            job['data'] = @data if @data
+            job['stdin'] = @job_stdin
+            job['data'] = @data
             unless job['state'] =~ %r/running/io
               resubmitted = nil
               @q.resubmit(job){|resubmitted|}
